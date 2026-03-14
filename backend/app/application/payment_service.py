@@ -174,7 +174,6 @@ class PaymentService:
                 INSERT INTO order_status_history (id, order_id, status, changed_at)
                 VALUES (gen_random_uuid(), :order_id, 'paid', NOW())
             """)
-            
             await self.session.execute(history_query, {"order_id": order_id})
         
         return {

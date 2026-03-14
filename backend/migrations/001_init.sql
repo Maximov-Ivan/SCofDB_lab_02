@@ -148,7 +148,7 @@ CREATE TRIGGER trigger_recalculate_order_total
     AFTER INSERT OR UPDATE OR DELETE ON order_items
     FOR EACH ROW
     EXECUTE FUNCTION recalculate_order_total();
-
+/*
 -- TODO: Триггер автоматической записи в историю при изменении статуса
 CREATE OR REPLACE FUNCTION log_order_status_change()
 RETURNS TRIGGER AS $$
@@ -180,3 +180,4 @@ CREATE TRIGGER trigger_log_initial_order_status
     AFTER INSERT ON orders
     FOR EACH ROW
     EXECUTE FUNCTION log_initial_order_status();
+*/

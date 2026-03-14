@@ -187,8 +187,6 @@ async def test_concurrent_payment_unsafe_demonstrates_race_condition(db_session,
         payment_attempt_2(),
         return_exceptions=True
     )
-
-    await engine.dispose()
     
     service = PaymentService(db_session)
     history = await service.get_payment_history(order_id)
@@ -200,6 +198,8 @@ async def test_concurrent_payment_unsafe_demonstrates_race_condition(db_session,
     print(f"Order {order_id} was paid TWICE:")
     for i, record in enumerate(history, 1):
         print(f"  {i}. {record['changed_at']}: status = {record['status']}")
+
+    await engine.dispose()
 
 
 '''
