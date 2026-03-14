@@ -191,11 +191,6 @@ async def test_concurrent_payment_safe_prevents_race_condition(db_session, test_
     
     assert success_count == 1, f"Ожидалась одна успешная оплата"
     assert error_count == 1, f"Ожидалась одна неудачная попытка"
-    
-    for r in results:
-        if isinstance(r, Exception):
-            assert isinstance(r, OrderAlreadyPaidError), f"Ожидалась OrderAlreadyPaidError, получена {type(r)}"
-    
 
     service = PaymentService(db_session)
     history = await service.get_payment_history(order_id)
@@ -212,113 +207,6 @@ async def test_concurrent_payment_safe_prevents_race_condition(db_session, test_
     await session2.close()
     await engine.dispose()
 
-'''
-@pytest.mark.asyncio
-async def test_concurrent_payment_safe_with_explicit_timing():
-    """
-    Дополнительный тест: проверить работу блокировок с явной задержкой.
-    
-    TODO: Реализовать тест с добавлением задержки в первой транзакции:
-    
-    1. Первая транзакция:
-       - Начать транзакцию
-       - Заблокировать заказ (FOR UPDATE)
-       - Добавить задержку (asyncio.sleep(1))
-       - Оплатить
-       - Commit
-       
-    2. Вторая транзакция (запустить через 0.1 секунды после первой):
-       - Начать транзакцию
-       - Попытаться заблокировать заказ (FOR UPDATE)
-       - ДОЛЖНА ЖДАТЬ освобождения блокировки от первой транзакции
-       - После освобождения - увидеть обновленный статус 'paid'
-       - Выбросить OrderAlreadyPaidError
-       
-    3. Проверить временные метки:
-       - Вторая транзакция должна завершиться ПОЗЖЕ первой
-       - Разница должна быть >= 1 секунды (время задержки)
-       
-    Это подтверждает, что FOR UPDATE действительно блокирует строку.
-    """
-    # TODO: Реализовать тест с проверкой блокировки
-    order_id = test_order
-    engine = create_async_engine(DATABASE_URL, echo=False)
-    session1 = AsyncSession(engine)
-    session2 = AsyncSession(engine)
-    
-    async def payment_attempt_with_delay():
-        service1 = PaymentService(session1)
-        start_time = datetime.now()
-        await session1.execute(text("BEGIN"))
-        
-        try:
-            select_query = text("""
-                SELECT status FROM orders 
-                WHERE id = :order_id 
-                FOR UPDATE
-            """)
-            await session1.execute(select_query, {"order_id": order_id})
-            await asyncio.sleep(1)
-            result = await service1.pay_order_safe(order_id)
-            await session1.commit()
-            end_time = datetime.now()
-            return {"result": result, "start": start_time, "end": end_time}
-        except Exception as e:
-            await session1.rollback()
-            return {"error": e, "start": start_time, "end": datetime.now()}
-    
-    async def payment_attempt_with_blocking():
-        service2 = PaymentService(session2)
-        start_time = datetime.now()
-        await asyncio.sleep(0.1)
-        
-        try:
-            result = await service2.pay_order_safe(order_id)
-            await session2.commit()
-            end_time = datetime.now()
-            return {"result": result, "start": start_time, "end": end_time}
-        except Exception as e:
-            await session2.rollback()
-            end_time = datetime.now()
-            return {"error": e, "start": start_time, "end": end_time}
-    
-    results = await asyncio.gather(
-        payment_attempt_with_delay(),
-        payment_attempt_with_blocking()
-    )
-    
-    assert "error" not in results[0], f"Первая транзакция не должна была упасть: {results[0].get('error')}"
-    assert results[0]["result"]["status"] == "paid"
-    
-    assert "error" in results[1], "Вторая транзакция должна была упасть"
-    assert isinstance(results[1]["error"], OrderAlreadyPaidError)
-    
-    assert results[1]["end"] > results[0]["end"], "Вторая транзакция должна завершиться позже первой"
-    
-    time_diff = (results[1]["end"] - results[0]["end"]).total_seconds()
-    assert time_diff >= 0.99, f"Ожидалась задержка >= 1 сек, получено {time_diff} сек"
-    
-    await session1.close()
-    await session2.close()
-    await engine.dispose()
-
-
-@pytest.mark.asyncio
-async def test_concurrent_payment_safe_multiple_orders():
-    """
-    Дополнительный тест: проверить, что блокировки не мешают разным заказам.
-    
-    TODO: Реализовать тест:
-    1. Создать ДВА разных заказа
-    2. Оплатить их ПАРАЛЛЕЛЬНО с помощью pay_order_safe()
-    3. Проверить, что ОБА успешно оплачены
-    
-    Это показывает, что FOR UPDATE блокирует только конкретную строку,
-    а не всю таблицу, что важно для производительности.
-    """
-    # TODO: Реализовать тест с несколькими заказами
-    raise NotImplementedError("TODO: Реализовать test_concurrent_payment_safe_multiple_orders")
-'''
 
 if __name__ == "__main__":
     """

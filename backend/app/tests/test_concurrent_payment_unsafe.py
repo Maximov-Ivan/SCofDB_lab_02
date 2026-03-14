@@ -202,55 +202,6 @@ async def test_concurrent_payment_unsafe_demonstrates_race_condition(db_session,
     await engine.dispose()
 
 
-'''
-@pytest.mark.asyncio
-async def test_concurrent_payment_unsafe_both_succeed():
-    """
-    Дополнительный тест: проверить, что ОБЕ транзакции успешно завершились.
-    
-    TODO: Реализовать проверку, что:
-    1. Обе попытки оплаты вернули успешный результат
-    2. Ни одна не выбросила исключение
-    3. Обе записали в историю
-    
-    Это подтверждает, что проблема не в ошибках, а в race condition.
-    """
-    # TODO: Реализовать проверку успешности обеих транзакций
-    order_id = test_order
-    engine = create_async_engine(DATABASE_URL, echo=False)
-    session1 = AsyncSession(engine)
-    session2 = AsyncSession(engine)
-    
-    async def payment_attempt_1():
-        service1 = PaymentService(session1)
-        return await service1.pay_order_unsafe(order_id)
-    
-    async def payment_attempt_2():
-        service2 = PaymentService(session2)
-        return await service2.pay_order_unsafe(order_id)
-    
-    results = await asyncio.gather(
-        payment_attempt_1(),
-        payment_attempt_2(),
-        return_exceptions=True
-    )
-    
-    for i, result in enumerate(results, 1):
-        assert not isinstance(result, Exception), f"Попытка {i} завершилась с ошибкой: {result}"
-        assert result["status"] == "paid", f"Попытка {i} не вернула статус paid"
-    
-    service = PaymentService(db_session)
-    history = await service.get_payment_history(order_id)
-    assert len(history) == 2, "В истории должно быть две записи об оплате"
-    
-    print(f"✅ Обе транзакции успешно завершились и записались в историю")
-    print(f"Заказ {order_id} оплачен {len(history)} раза")
-    
-    await session1.close()
-    await session2.close()
-    await engine.dispose()
-'''
-
 if __name__ == "__main__":
     """
     Запуск теста:
