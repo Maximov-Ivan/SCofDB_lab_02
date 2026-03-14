@@ -159,11 +159,11 @@ class PaymentService:
             order_row = result.first()
             if not order_row:
                 raise OrderNotFoundError(order_id)
-            status, user_id, total_amount, created_at = order_row
             
-            if status != 'created':
+            if order_row[0] != 'created':
                 raise OrderAlreadyPaidError(order_id)
             
+            status, user_id, total_amount, created_at = order_row
             update_query = text("""
                 UPDATE orders SET status = 'paid' 
                 WHERE id = :order_id AND status = 'created'
