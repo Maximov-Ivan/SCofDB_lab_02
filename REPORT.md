@@ -458,11 +458,18 @@ PASSED
 _TODO: Вставьте скриншоты или вывод команд, демонстрирующие корректную работу._
 
 ```
-# История статусов после теста
- id | order_id | status | changed_at
-----|----------|--------|------------
- .. | ...      | created | 2024-...
- .. | ...      | paid    | 2024-... <-- Только одна запись (КОРРЕКТНО!)
+app/tests/test_concurrent_payment_safe.py::test_concurrent_payment_safe_prevents_race_condition
+✅ RACE CONDITION PREVENTED!
+Order 72a496eb-b993-4268-a33e-faaf534308f2 was paid only ONCE:
+  - 2026-03-14 10:12:05.705131+00:00: status = paid
+Second attempt was rejected: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.SerializationError'>: could not serialize access due to concurrent update
+[SQL:
+                SELECT status, user_id, total_amount, created_at
+                FROM orders
+                WHERE id = $1
+                FOR UPDATE
+            ]
+[parameters: (UUID('72a496eb-b993-4268-a33e-faaf534308f2'),)]
 ```
 
 ---
