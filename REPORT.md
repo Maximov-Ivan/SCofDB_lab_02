@@ -470,6 +470,8 @@ Second attempt was rejected: (sqlalchemy.dialects.postgresql.asyncpg.Error) <cla
                 FOR UPDATE
             ]
 [parameters: (UUID('72a496eb-b993-4268-a33e-faaf534308f2'),)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+PASSED
 ```
 
 ---
