@@ -8,6 +8,7 @@ pay_order_unsafe() возникает двойная оплата.
 import asyncio
 import pytest
 import uuid
+import os
 from datetime import datetime
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
@@ -15,7 +16,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from app.application.payment_service import PaymentService
 
 # TODO: Настроить подключение к тестовой БД
-DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/marketplace"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/marketplace"
+)
 
 
 @pytest.fixture
